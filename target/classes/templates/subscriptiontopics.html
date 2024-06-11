@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Subscription Topics</title>
+</head>
+<body>
+<div th:fragment="content">
+    <h2>Subscription Topics</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <!--<th>Resource</th>
+                <th>Event</th>-->
+                <th>ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="topic : ${subscriptionTopics}">
+                <td th:text="${topic.name}">Name</td>
+                <!--<td th:text="${topic.resource}">Resource</td>
+                <td th:text="${topic.event}">Event</td>-->
+                <td th:text="${topic.id}">ID</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "groups": [
+    {
+      "name": "system",
+      "type": "us.dit.consentimientos.service.conf.SystemPropertiesInjector",
+      "sourceType": "us.dit.consentimientos.service.conf.SystemPropertiesInjector"
+    }
+  ],
+  "properties": [
+    {
+      "name": "system.properties",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "sourceType": "us.dit.consentimientos.service.conf.SystemPropertiesInjector"
+    }
+  ],
+  "hints": []
+}
