@@ -37,6 +37,7 @@
     <form th:action="@{/submit-filters}" method="post">
         <input type="hidden" id="fhirUrl" name="fhirUrl" th:value="${fhirUrl}" />
         <input type="hidden" name="topicUrl" th:value="${topicUrl}">
+        <input type="hidden" id="endpoint" name="endpoint" th:value="${endpoint}">
         <input type="hidden" name="payload" th:value="${payload}">
         <div th:each="filter : ${filters}">
             <div class="form-group">

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import us.dit.consentimientos.service.entities.NotificationEP;
-import us.dit.consentimientos.service.services.NotificationEPService;
+import us.dit.consentimientos.service.services.kie.NotificationEPService;
 
 @Controller
 @RequestMapping("/notificationEPs")

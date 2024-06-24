@@ -3,6 +3,7 @@ package us.dit.consentimientos.service.controllers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,10 +12,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import us.dit.consentimientos.service.entities.NotificationEP;
 import us.dit.consentimientos.service.services.fhir.Filter;
 import us.dit.consentimientos.service.services.fhir.SubscriptionDetails;
 import us.dit.consentimientos.service.services.fhir.SubscriptionService;
 import us.dit.consentimientos.service.services.fhir.SubscriptionTopicDetails;
+import us.dit.consentimientos.service.services.kie.NotificationEPService;
 
 //Clase que controla las llamadas a los métodos necesarios al navegar por la interfaz web
 @Controller
@@ -22,6 +25,8 @@ public class SubscriptionController {
 
     @Autowired
     private SubscriptionService subscriptionService;
+    @Autowired
+    private NotificationEPService notificationEPService;
     
     @GetMapping("/")
     public String getHomePage(Model model) {
@@ -40,6 +45,7 @@ public class SubscriptionController {
         model.addAttribute("subscriptions", subscriptions);
         model.addAttribute("topicIds", topicIds);
         model.addAttribute("fhirUrl", fhirUrlFull);
+        
         return "subscriptions-manager";
     }
 
@@ -51,6 +57,31 @@ public class SubscriptionController {
         model.addAttribute("filters", filters);
         model.addAttribute("fhirUrl", fhirUrl);
 
+         //obtener recurso e interacción del topic
+         String resource = subscriptionService.getTopicResource(topicUrl);
+         String interaction = subscriptionService.getTopicInteraction(topicUrl);
+         String endpoint;
+         System.out.println("recurso: "+ resource + " interaction: "+interaction);
+         //Comparar si existe ya
+         Optional<NotificationEP> optionalNotificationEP = notificationEPService.findNotificationEPByResourceAndInteraction(resource, interaction);
+         if (optionalNotificationEP.isPresent()) {
+             //si existe cogemos el id y este será nuestro endpoint
+             NotificationEP existingNotificationEP = optionalNotificationEP.get();
+             endpoint = "localhost:8090/notification/" + existingNotificationEP.getId();
+         } else {
+            //Si no existe se crea un endpoint nuevo
+             String signalName = interaction+"-"+resource; 
+             NotificationEP newNotificationEP = new NotificationEP();
+             newNotificationEP.setResource(resource);
+             newNotificationEP.setInteraction(interaction);
+             newNotificationEP.setSignalName(signalName);
+             NotificationEP savedNotificationEP = notificationEPService.saveNotificationEP(newNotificationEP);
+             endpoint = "localhost:8090/notification/" + savedNotificationEP.getId();
+             // Resto de la lógica
+         }
+
+        model.addAttribute("endpoint", endpoint);
+
         return "subscription-form";
     }
 
@@ -61,7 +92,7 @@ public class SubscriptionController {
     }
 
     @PostMapping("/submit-filters")
-    public String submitFilters(@RequestParam Map<String, String> requestParams,@RequestParam String fhirUrl, Model model) {
+    public String submitFilters(@RequestParam Map<String, String> requestParams,@RequestParam String fhirUrl, @RequestParam String endpoint, Model model) {
         List<Filter> filters = new ArrayList<>();
         String topicUrl = requestParams.get("topicUrl");
         String payload = requestParams.get("payload");
@@ -83,7 +114,7 @@ public class SubscriptionController {
             }
         }
 
-        subscriptionService.createSubscription(topicUrl, payload, filters, fhirUrl);
+        subscriptionService.createSubscription(topicUrl, payload, filters, fhirUrl, endpoint);
 
         String url = fhirUrl.replace("http://", "").replace("/fhir", "");
         return "redirect:/subscriptions?fhirUrl="+url;

@@ -36,7 +36,15 @@ public class SubscriptionService {
         fhirClient.deleteSubscription(subscriptionId);
     }
 
-    public void createSubscription(String topicUrl, String payload, List<Filter> filters, String fhirUrl) {
-        fhirClient.createSubscription(topicUrl, payload, filters, fhirUrl);
+    public String getTopicResource(String topicUrl){
+        return fhirClient.getTopicResource(topicUrl);
+    }
+    public String getTopicInteraction(String topicUrl){
+        return fhirClient.getTopicInteraction(topicUrl);
+    }
+    
+
+    public void createSubscription(String topicUrl, String payload, List<Filter> filters, String fhirUrl, String endpoint) {
+        fhirClient.createSubscription(topicUrl, payload, filters, fhirUrl, endpoint);
     }
 }

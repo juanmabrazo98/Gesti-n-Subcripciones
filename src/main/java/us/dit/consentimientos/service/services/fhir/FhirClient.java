@@ -228,6 +228,36 @@ public class FhirClient {
         }
     }
 
+    public String getTopicInteraction(String referencia) {
+        try {
+            String url = referencia;
+            HttpHeaders headers = createHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON); 
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String json = response.getBody();
+
+            // Parse the JSON response
+            JSONObject jsonResponse = new JSONObject(json);
+
+            // Extract the resource from the SubscriptionTopic
+            if (jsonResponse.has("resourceTrigger")) {
+                JSONObject resourceTrigger = jsonResponse.getJSONArray("resourceTrigger").getJSONObject(0);
+                if (resourceTrigger.has("supportedInteraction")) {
+                    return resourceTrigger.getJSONArray("supportedInteraction").getString(0);
+                } else {
+                    throw new RuntimeException("No supportedInteraction found in the resourceTrigger");
+                }
+            } else {
+                throw new RuntimeException("No resourceTrigger found in the SubscriptionTopic");
+            }
+        } catch (Exception e) {
+            System.err.println("Error accessing FHIR server: " + e.getMessage());
+            return "Unknown";
+        }
+    }
+
 
     public List<String> getSubscriptionTopicIds(String fhirUrl) {
         try {
@@ -316,7 +346,7 @@ public class FhirClient {
         }
     }
 
-    public void createSubscription(String topicUrl, String payload, List<Filter> filters, String fhirUrl) {
+    public void createSubscription(String topicUrl, String payload, List<Filter> filters, String fhirUrl, String endpoint) {
         try {
             String url = fhirUrl + "/Subscription";
             HttpHeaders headers = createHeaders();
@@ -331,7 +361,7 @@ public class FhirClient {
             channelType.put("code", "rest-hook");
 
             subscriptionJson.put("channelType", channelType);
-            subscriptionJson.put("endpoint", "http://localhost:8090/endpoint"); //modificar
+            subscriptionJson.put("endpoint", endpoint); 
             subscriptionJson.put("heartbeatPeriod", 60);
             subscriptionJson.put("timeout", 300);
             subscriptionJson.put("content", payload);
