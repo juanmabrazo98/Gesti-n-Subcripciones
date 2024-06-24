@@ -1,6 +1,9 @@
 package us.dit.consentimientos.service.controllers;
 
-import us.dit.consentimientos.service.services.fhir.SubscriptionService;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -8,12 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import us.dit.consentimientos.service.services.fhir.SubscriptionTopicDetails;
-import us.dit.consentimientos.service.services.fhir.SubscriptionDetails;
 import us.dit.consentimientos.service.services.fhir.Filter;
+import us.dit.consentimientos.service.services.fhir.SubscriptionDetails;
+import us.dit.consentimientos.service.services.fhir.SubscriptionService;
+import us.dit.consentimientos.service.services.fhir.SubscriptionTopicDetails;
 
 //Clase que controla las llamadas a los métodos necesarios al navegar por la interfaz web
 @Controller
@@ -21,32 +22,35 @@ public class SubscriptionController {
 
     @Autowired
     private SubscriptionService subscriptionService;
-
+    
     @GetMapping("/")
     public String getHomePage(Model model) {
-        List<SubscriptionTopicDetails> topics = subscriptionService.getSubscriptionTopics();
-        List<SubscriptionDetails> subscriptions = subscriptionService.getSubscriptions();
-        List<String> topicIds = subscriptionService.getSubscriptionTopicIds();
+        return "index";
+    }
+    @GetMapping("/subscriptions")
+    public String getSubscriptionPage(Model model, @RequestParam String fhirUrl) {
+
+        String fhirUrlFull="http://" + fhirUrl + "/fhir";
+        System.out.println(fhirUrlFull);
+
+        List<SubscriptionTopicDetails> topics = subscriptionService.getSubscriptionTopics(fhirUrlFull);
+        List<SubscriptionDetails> subscriptions = subscriptionService.getSubscriptions(fhirUrlFull);
+        List<String> topicIds = subscriptionService.getSubscriptionTopicIds(fhirUrlFull);
         model.addAttribute("subscriptionTopics", topics);
         model.addAttribute("subscriptions", subscriptions);
         model.addAttribute("topicIds", topicIds);
-        return "index";
-    }
-    @GetMapping("/topics")
-    public String getTopicsPage(Model model) {
-        List<SubscriptionTopicDetails> topics = subscriptionService.getSubscriptionTopics();
-        model.addAttribute("subscriptionTopics", topics);
-        return "topics";
+        model.addAttribute("fhirUrl", fhirUrlFull);
+        return "subscriptions-manager";
     }
 
     @PostMapping("/create-subscription")
-    public String createSubscription(@RequestParam String topicUrl, @RequestParam String payload, Model model) {
-        //subscriptionService.createSubscription(topicUrl, payload);
-        //return "redirect:/";
-        List<SubscriptionTopicDetails.FilterDetail> filters = subscriptionService.getFilters(topicUrl);
+    public String createSubscription(@RequestParam String topicUrl, @RequestParam String payload, @RequestParam String fhirUrl, Model model) { 
+        List<SubscriptionTopicDetails.FilterDetail> filters = subscriptionService.getFilters(topicUrl, fhirUrl);
         model.addAttribute("topicUrl", topicUrl);
         model.addAttribute("payload", payload);
         model.addAttribute("filters", filters);
+        model.addAttribute("fhirUrl", fhirUrl);
+
         return "subscription-form";
     }
 
@@ -57,7 +61,7 @@ public class SubscriptionController {
     }
 
     @PostMapping("/submit-filters")
-    public String submitFilters(@RequestParam Map<String, String> requestParams, Model model) {
+    public String submitFilters(@RequestParam Map<String, String> requestParams,@RequestParam String fhirUrl, Model model) {
         List<Filter> filters = new ArrayList<>();
         String topicUrl = requestParams.get("topicUrl");
         String payload = requestParams.get("payload");
@@ -79,9 +83,10 @@ public class SubscriptionController {
             }
         }
 
-        subscriptionService.createSubscription(topicUrl, payload, filters);
+        subscriptionService.createSubscription(topicUrl, payload, filters, fhirUrl);
 
-        return "redirect:/";
+        String url = fhirUrl.replace("http://", "").replace("/fhir", "");
+        return "redirect:/subscriptions?fhirUrl="+url;
     }
     
 }

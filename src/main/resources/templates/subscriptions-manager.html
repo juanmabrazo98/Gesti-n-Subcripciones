@@ -19,16 +19,16 @@
             <h5 class="text-center"><strong>Aplicación iniciada correctamente</strong></h5>
         </div>
     </div>
+
     <div class="row">
-        <div class="col-12">
-            <form th:action="@{/subscriptions}" method="get">
-                <div class="form-group">
-                    <label for="fhirUrl">Introducir IP:Puerto del Servidor:</label>
-                    <input type="text" id="fhirUrl" name="fhirUrl" class="form-control" placeholder="ip:puerto" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Conectar</button>
-            </form>
-        </div>
+        <!-- Listado de Subscription Topics -->
+        <div class="col-12 mb-3" th:include="subscriptiontopics :: content"></div>
+
+        <!-- Listado de Suscripciones -->
+        <div class="col-12 mb-3" th:include="subscriptions :: content"></div>
+
+        <!-- Formulario para crear suscripción -->
+        <div class="col-12 mb-3" th:include="createSubscription :: content"></div>
     </div>
 </div>
 </body>

@@ -66,9 +66,9 @@ public class FhirClient {
                 .orElse("N/A");
     }
 
-    public List<SubscriptionTopicDetails> getSubscriptionTopics() {
+    public List<SubscriptionTopicDetails> getSubscriptionTopics(String fhirUrl) {//argumento string con url fhir
         try {
-            String url = fhirServerUrl + "/SubscriptionTopic";
+            String url = fhirUrl + "/SubscriptionTopic"; // variable
             HttpHeaders headers = createHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -126,10 +126,10 @@ public class FhirClient {
         }
     }
 
-    public List<SubscriptionDetails> getSubscriptions() {
+    public List<SubscriptionDetails> getSubscriptions(String fhirUrl) {
         try {
             System.out.println("1. obteniendo subscripciones");
-            String url = fhirServerUrl + "/Subscription";
+            String url = fhirUrl + "/Subscription";
             HttpHeaders headers = createHeaders();
             headers.setContentType(MediaType.valueOf("application/fhir+json")); // Asegurar que el Content-Type sea correcto
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -229,9 +229,9 @@ public class FhirClient {
     }
 
 
-    public List<String> getSubscriptionTopicIds() {
+    public List<String> getSubscriptionTopicIds(String fhirUrl) {
         try {
-            String url = fhirServerUrl + "/SubscriptionTopic";
+            String url = fhirUrl + "/SubscriptionTopic";
             HttpHeaders headers = createHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -258,56 +258,6 @@ public class FhirClient {
         }
     }
 
-    /*public void createSubscription(String topicUrl, String payload) {
-        try {
-            String url = fhirServerUrl + "/Subscription";
-            HttpHeaders headers = createHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // Construir el JSON manualmente
-            JSONObject subscriptionJson = new JSONObject();
-            subscriptionJson.put("resourceType", "Subscription");
-            subscriptionJson.put("status", "active");
-            subscriptionJson.put("topic", topicUrl);
-
-            JSONObject channelType = new JSONObject();
-            channelType.put("code", "rest-hook");
-
-
-            subscriptionJson.put("channelType", channelType);
-            subscriptionJson.put("endpoint", "http://localhost:8090/endpoint");
-            subscriptionJson.put("heartbeatPeriod", 60);
-            subscriptionJson.put("timeout", 300);
-            subscriptionJson.put("content", payload);
-            subscriptionJson.put("contentType", "application/fhir+json");
-
-            //filtros
-            JSONArray filterByArray = new JSONArray();
-            for(filtros){
-                JSONObject filterBy1 = new JSONObject();
-                filterBy1.put("filterParameter", "status");
-                filterBy1.put("comparator", "eq");
-                filterBy1.put("value", "active");
-                filterByArray.put(filterBy1);
-            }
-            subscriptionJson.put("filterBy", filterByArray);
-
-            HttpEntity<String> entity = new HttpEntity<>(subscriptionJson.toString(), headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-            if (response.getStatusCode() == HttpStatus.CREATED) {
-                System.out.println("Subscription created successfully.");
-            } else {
-                System.err.println("Failed to create subscription. Status code: " + response.getStatusCode());
-            }
-        } catch (ResourceAccessException e) {
-            System.err.println("Error accessing FHIR server: " + e.getMessage());
-        } catch (HttpClientErrorException e) {
-            System.err.println("Client error: " + e.getMessage());
-            System.err.println("Response body: " + e.getResponseBodyAsString());
-        }
-    }*/
-
     public void deleteSubscription(String subscriptionId) {
         try {
             String url = fhirServerUrl + "/Subscription/" + subscriptionId;
@@ -322,9 +272,9 @@ public class FhirClient {
     }
 
     //------------
-    public List<SubscriptionTopicDetails.FilterDetail> getFilters(String topicUrl) {
+    public List<SubscriptionTopicDetails.FilterDetail> getFilters(String topicUrl, String fhirUrl) {
         try {
-            String url = fhirServerUrl + "/SubscriptionTopic?url=" + topicUrl;
+            String url = fhirUrl + "/SubscriptionTopic?url=" + topicUrl;
             HttpHeaders headers = createHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -366,9 +316,9 @@ public class FhirClient {
         }
     }
 
-    public void createSubscription(String topicUrl, String payload, List<Filter> filters) {
+    public void createSubscription(String topicUrl, String payload, List<Filter> filters, String fhirUrl) {
         try {
-            String url = fhirServerUrl + "/Subscription";
+            String url = fhirUrl + "/Subscription";
             HttpHeaders headers = createHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -381,7 +331,7 @@ public class FhirClient {
             channelType.put("code", "rest-hook");
 
             subscriptionJson.put("channelType", channelType);
-            subscriptionJson.put("endpoint", "http://localhost:8090/endpoint");
+            subscriptionJson.put("endpoint", "http://localhost:8090/endpoint"); //modificar
             subscriptionJson.put("heartbeatPeriod", 60);
             subscriptionJson.put("timeout", 300);
             subscriptionJson.put("content", payload);
