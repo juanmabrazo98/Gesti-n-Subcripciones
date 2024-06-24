@@ -1,4 +1,4 @@
-package us.dit.consentimientos.config;
+package us.dit.consentimientos.service.conf;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;

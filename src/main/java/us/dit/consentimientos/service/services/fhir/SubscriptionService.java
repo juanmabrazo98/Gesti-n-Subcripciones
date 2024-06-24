@@ -5,9 +5,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import us.dit.consentimientos.service.services.fhir.SubscriptionTopicDetails;
 import us.dit.consentimientos.service.services.fhir.SubscriptionDetails;
+import us.dit.consentimientos.service.services.fhir.Filter;
 
 @Service
 public class SubscriptionService {
@@ -33,39 +35,21 @@ public class SubscriptionService {
         return fhirClient.getSubscriptionTopicIds();
     }
 
-    public void createSubscription(String topic, String payload) {
+    /*public void createSubscription(String topic, String payload) {
         System.out.println("Creating subscription with topic: " + topic + " and payload: " + payload);
         fhirClient.createSubscription(topic, payload);
+    }*/
+
+    public List<SubscriptionTopicDetails.FilterDetail> getFilters(String topicUrl) {
+        // Llamar al cliente FHIR para obtener los filtros para el topicUrl dado
+        return fhirClient.getFilters(topicUrl);
     }
 
-    public void createTopic(String topicTitle, String resource, String interaction) {
-        // Implementar la lógica para crear un nuevo tópico en el servidor FHIR
-        fhirClient.createTopic(topicTitle, resource, interaction);
+    public void deleteSubscription(String subscriptionId) {
+        fhirClient.deleteSubscription(subscriptionId);
     }
 
-    public void deleteTopic(String topicId) {
-        // Implementar la lógica para eliminar un tópico en el servidor FHIR
-        fhirClient.deleteTopic(topicId);
-    }
-
-    public void deleteTopicAndRelatedSubscriptions(String topicId) {
-        // Obtener la URL completa del tópico
-        String topicUrl = fhirServerUrl + "/SubscriptionTopic/" + topicId;
-
-        // Obtener todas las suscripciones
-        List<SubscriptionDetails> subscriptions = getSubscriptions();
-        List<String> topicUrls = subscriptions.stream().map(SubscriptionDetails::getTopicUrl).collect(Collectors.toList());
-         System.out.println("Debug: topic URLs. " + topicUrls);
-        // Filtrar las suscripciones que están relacionadas con el tópico a eliminar
-        List<String> relatedSubscriptionIds = subscriptions.stream()
-                .filter(subscription -> topicUrl.equals(subscription.getTopicUrl())) // Uso de getTopicUrl()
-                .map(SubscriptionDetails::getId)
-                .collect(Collectors.toList());
-        System.out.println("2. listado de subscripciones relacionadas con el topic: " + relatedSubscriptionIds);
-        // Eliminar todas las suscripciones relacionadas
-        relatedSubscriptionIds.forEach(subscriptionId -> fhirClient.deleteSubscription(subscriptionId));
-
-        // Eliminar el tópico
-        fhirClient.deleteTopic(topicId);
+    public void createSubscription(String topicUrl, String payload, List<Filter> filters) {
+        fhirClient.createSubscription(topicUrl, payload, filters);
     }
 }

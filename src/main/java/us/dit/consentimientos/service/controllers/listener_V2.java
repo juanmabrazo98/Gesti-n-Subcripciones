@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import us.dit.consentimientos.model.Signal;
+//import us.dit.consentimientos.model.Signal;
 import us.dit.consentimientos.service.services.fhir.FhirClient;
 import us.dit.consentimientos.service.services.kie.KieUtilService;
 
@@ -201,16 +201,16 @@ public class listener_V2 {
         // Lógica adicional para manejar QuestionnaireResponse
     }
 
-    @PostMapping()	
+    /*@PostMapping()	
 	public String sendSignal(@RequestBody Signal signal,HttpSession session) {
-		/**
-		 * Difunde una señal por todos los servidores KIE gestionados en la aplicación
-		 */
+		
+		//Difunde una señal por todos los servidores KIE gestionados en la aplicación
+		 
 		logger.info("Enviando una señal a todos");
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		UserDetails principal = (UserDetails) auth.getPrincipal();
 		logger.info("Datos de usuario (principal)" + principal);
 		kie.sendSignal(signal.getName(), signal.getMessage());		
 		return "OK";
-		}
+		}*/
 }

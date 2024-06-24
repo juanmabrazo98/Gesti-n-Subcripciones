@@ -2,6 +2,38 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Subscription Topics</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        ul {
+            padding: 0;
+            list-style: none;
+        }
+
+        li {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .filter-detail span {
+            display: inline-block;
+            margin-right: 10px;
+            text-align: left;
+        }
+    </style>
 </head>
 <body>
 <div th:fragment="content">
@@ -10,17 +42,24 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <!--<th>Resource</th>
-                <th>Event</th>-->
                 <th>ID</th>
+                <th>Filters</th>
             </tr>
         </thead>
         <tbody>
             <tr th:each="topic : ${subscriptionTopics}">
                 <td th:text="${topic.name}">Name</td>
-                <!--<td th:text="${topic.resource}">Resource</td>
-                <td th:text="${topic.event}">Event</td>-->
                 <td th:text="${topic.id}">ID</td>
+                <td>
+                    <ul style="text-align: left; padding-left: 0;">
+                        <li th:each="filter : ${topic.filters}" style="margin-bottom: 10px;">
+                            <span th:text="'Description: ' + ${filter.description}"></span>
+                            <span th:text="'Parameter: ' + ${filter.filterParameter}"></span>
+                            <span th:text="'Comparators: ' + ${filter.comparators}"></span>
+                            <span th:text="'Modifiers: ' + ${filter.modifiers}"></span>
+                        </li>
+                    </ul>
+                </td>
             </tr>
         </tbody>
     </table>

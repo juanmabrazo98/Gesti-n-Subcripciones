@@ -1,29 +1,32 @@
 package us.dit.consentimientos.service.services.fhir;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
-import org.hl7.fhir.r5.model.Bundle;
-import org.hl7.fhir.r5.model.Subscription;
-import org.hl7.fhir.r5.model.Coding;
-import org.hl7.fhir.r5.model.SubscriptionTopic;
-import org.hl7.fhir.r5.model.SubscriptionTopic.SubscriptionTopicResourceTriggerComponent;
-import org.hl7.fhir.r5.model.StringType;
-import org.hl7.fhir.r5.model.Enumerations.SubscriptionState;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
-
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
-import org.json.JSONObject;
+
+import org.hl7.fhir.r5.model.Bundle;
+import org.hl7.fhir.r5.model.StringType;
+import org.hl7.fhir.r5.model.Subscription;
+import org.hl7.fhir.r5.model.SubscriptionTopic;
+import org.hl7.fhir.r5.model.SubscriptionTopic.SubscriptionTopicCanFilterByComponent;
 import org.json.JSONArray;
-import us.dit.consentimientos.service.services.fhir.SubscriptionTopicDetails;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 
 //Esta clase desarrolla las distintas operaciones que se realizan sobre elementos FHIR
 @Service
@@ -55,16 +58,23 @@ public class FhirClient {
         return headers;
     }
 
+    private String getExtensionValue(SubscriptionTopicCanFilterByComponent component, String extensionUrl) {
+        return component.getExtension().stream()
+                .filter(ext -> ext.getUrl().equals(extensionUrl) && ext.getValue() instanceof StringType)
+                .map(ext -> ((StringType) ext.getValue()).getValue())
+                .findFirst()
+                .orElse("N/A");
+    }
+
     public List<SubscriptionTopicDetails> getSubscriptionTopics() {
         try {
-            System.out.println("obteniendo tópicos");
             String url = fhirServerUrl + "/SubscriptionTopic";
             HttpHeaders headers = createHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             String json = response.getBody();
-            //Pasamos a Bundle
+
             FhirContext ctx = FhirContext.forR5();
             IParser parser = ctx.newJsonParser();
             Bundle bundle = parser.parseResource(Bundle.class, json);
@@ -79,12 +89,39 @@ public class FhirClient {
                 String name = topic.getTitle();
                 String id = topic.getIdElement().getIdPart();
                 String topicUrl = topic.getUrl();
-                topicDetails.add(new SubscriptionTopicDetails(name, id, topicUrl));
-        }
+
+                List<SubscriptionTopicDetails.FilterDetail> filters = new ArrayList<>();
+                for (SubscriptionTopic.SubscriptionTopicCanFilterByComponent filterComponent : topic.getCanFilterBy()) {
+                    String description = filterComponent.getDescription();
+                    String filterParameter = filterComponent.getFilterParameter();
+
+                    // Obtener comparadores y modificadores
+                    List<String> comparators = new ArrayList<>();
+                    for (org.hl7.fhir.r5.model.Enumeration<org.hl7.fhir.r5.model.Enumerations.SearchComparator> comparatorEnum : filterComponent.getComparator()) {
+                        comparators.add(comparatorEnum.getCode());
+                    }
+
+                    List<String> modifiers = new ArrayList<>();
+                    for (org.hl7.fhir.r5.model.Enumeration<org.hl7.fhir.r5.model.Enumerations.SearchModifierCode> modifierEnum : filterComponent.getModifier()) {
+                        modifiers.add(modifierEnum.getCode());
+                    }
+
+                    filters.add(new SubscriptionTopicDetails.FilterDetail(description, filterParameter, comparators, modifiers));
+                }
+
+                topicDetails.add(new SubscriptionTopicDetails(name, id, topicUrl, filters));
+            }
 
             return topicDetails;
         } catch (ResourceAccessException e) {
             System.err.println("Error accessing FHIR server: " + e.getMessage());
+            return Collections.emptyList();
+        } catch (HttpClientErrorException e) {
+            System.err.println("Client error: " + e.getMessage());
+            System.err.println("Response body: " + e.getResponseBodyAsString());
+            return Collections.emptyList();
+        } catch (Exception e) {
+            System.err.println("General error: " + e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -96,36 +133,42 @@ public class FhirClient {
             HttpHeaders headers = createHeaders();
             headers.setContentType(MediaType.valueOf("application/fhir+json")); // Asegurar que el Content-Type sea correcto
             HttpEntity<String> entity = new HttpEntity<>(headers);
-
+    
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             String json = response.getBody();
-
-            JSONObject bundleJson = new JSONObject(json);
+    
+            FhirContext ctx = FhirContext.forR5();
+            IParser parser = ctx.newJsonParser();
+            Bundle bundle = parser.parseResource(Bundle.class, json);
+    
+            if (bundle == null || bundle.getEntry().isEmpty()) {
+                return Collections.emptyList();
+            }
             List<SubscriptionDetails> subscriptionDetails = new ArrayList<>();
-            if (bundleJson.has("entry")) {
-                JSONArray entries = bundleJson.getJSONArray("entry");
-                for (int i = 0; i < entries.length(); i++) {
-                    JSONObject entry = entries.getJSONObject(i).getJSONObject("resource");
-
-                    String endpoint = entry.optString("endpoint", "N/A"); 
-                    String payloadType = entry.optString("contentType", "N/A");
-                    String topicReference = entry.optString("topic", "N/A");
-                    String id = entry.optString("id", "N/A");
-
-                    System.out.println(topicReference);
-                    String topicTitle = getTopicTitle(topicReference);
-
-                    subscriptionDetails.add(new SubscriptionDetails(endpoint, payloadType, topicTitle, id, topicReference));
+            for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+                Subscription subscription = (Subscription) entry.getResource();
+                String endpoint = subscription.getEndpoint();
+                String topicTitle = subscription.getTopic();
+                String id = subscription.getIdElement().getIdPart();
+                
+                List<SubscriptionDetails.FilterDetail> filters = new ArrayList<>();
+                for (Subscription.SubscriptionFilterByComponent filter : subscription.getFilterBy()) {
+                    String filterParameter = filter.getFilterParameter(); // Corregido
+                    String comparator = (filter.getComparator() != null) ? filter.getComparator().toCode() : null;
+                    String modifier = (filter.getModifier() != null) ? filter.getModifier().toCode() : null;
+                    String value = filter.getValue(); // Corregido
+                    filters.add(new SubscriptionDetails.FilterDetail(filterParameter, comparator, modifier, value));
                 }
+                subscriptionDetails.add(new SubscriptionDetails(endpoint, topicTitle, id, filters));
             }
             return subscriptionDetails;
-
+    
         } catch (ResourceAccessException e) {
             System.err.println("Error accessing FHIR server: " + e.getMessage());
             return Collections.emptyList();
         }
     }
-
+    
     public String getTopicTitle(String referencia) {
         try {
             String url = referencia;
@@ -214,7 +257,8 @@ public class FhirClient {
             return Collections.emptyList();
         }
     }
-    public void createSubscription(String topicUrl, String payload) {
+
+    /*public void createSubscription(String topicUrl, String payload) {
         try {
             String url = fhirServerUrl + "/Subscription";
             HttpHeaders headers = createHeaders();
@@ -229,12 +273,24 @@ public class FhirClient {
             JSONObject channelType = new JSONObject();
             channelType.put("code", "rest-hook");
 
+
             subscriptionJson.put("channelType", channelType);
             subscriptionJson.put("endpoint", "http://localhost:8090/endpoint");
             subscriptionJson.put("heartbeatPeriod", 60);
             subscriptionJson.put("timeout", 300);
             subscriptionJson.put("content", payload);
             subscriptionJson.put("contentType", "application/fhir+json");
+
+            //filtros
+            JSONArray filterByArray = new JSONArray();
+            for(filtros){
+                JSONObject filterBy1 = new JSONObject();
+                filterBy1.put("filterParameter", "status");
+                filterBy1.put("comparator", "eq");
+                filterBy1.put("value", "active");
+                filterByArray.put(filterBy1);
+            }
+            subscriptionJson.put("filterBy", filterByArray);
 
             HttpEntity<String> entity = new HttpEntity<>(subscriptionJson.toString(), headers);
 
@@ -250,76 +306,8 @@ public class FhirClient {
             System.err.println("Client error: " + e.getMessage());
             System.err.println("Response body: " + e.getResponseBodyAsString());
         }
-    }
+    }*/
 
-    public void createTopic(String topicTitle, String resource, String interaction) {
-        try {
-            String url = fhirServerUrl + "/SubscriptionTopic";
-            HttpHeaders headers = createHeaders();
-
-            // Construir el JSON manualmente
-            JSONObject topicJson = new JSONObject();
-            topicJson.put("resourceType", "SubscriptionTopic");
-            topicJson.put("title", topicTitle);
-            topicJson.put("status", "active");
-
-            JSONObject resourceTrigger = new JSONObject();
-            resourceTrigger.put("resource", resource);
-            resourceTrigger.put("supportedInteraction", new JSONArray().put(interaction));
-
-            topicJson.put("resourceTrigger", new JSONArray().put(resourceTrigger));
-            topicJson.put("notificationShape", new JSONArray().put(new JSONObject().put("resource", resource)));
-
-            HttpEntity<String> entity = new HttpEntity<>(topicJson.toString(), headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-            if (response.getStatusCode() == HttpStatus.CREATED) {
-                System.out.println("Topic created successfully.");
-                String responseBody = response.getBody();
-                JSONObject responseJson = new JSONObject(responseBody);
-
-                // Extraer el ID del tópico creado
-                String topicId = responseJson.getString("id");
-
-                // Construir la URL completa usando el ID extraído
-                String topicUrl = fhirServerUrl + "/SubscriptionTopic/" + topicId;
-
-                // Crear un nuevo campo URL
-                responseJson.put("url", topicUrl);
-
-                // Realizar el PUT con la URL completa
-                HttpEntity<String> updateEntity = new HttpEntity<>(responseJson.toString(), headers);
-                ResponseEntity<String> updateResponse = restTemplate.exchange(topicUrl, HttpMethod.PUT, updateEntity, String.class);
-                if (updateResponse.getStatusCode() == HttpStatus.OK) {
-                    System.out.println("Topic URL updated successfully.");
-                } else {
-                    System.err.println("Failed to update topic URL. Status code: " + updateResponse.getStatusCode());
-                }
-            } else {
-                System.err.println("Failed to create topic. Status code: " + response.getStatusCode());
-            }
-        } catch (ResourceAccessException e) {
-            System.err.println("Error accessing FHIR server: " + e.getMessage());
-        }
-    }
-
-    public void deleteTopic(String topicId) {
-        try {
-            String url = fhirServerUrl + "/SubscriptionTopic/" + topicId;
-            System.out.println("4. eliminando topico" + url);
-            HttpHeaders headers = createHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
-            if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
-                System.out.println("Topic deleted successfully.");
-            } else {
-                System.err.println("Failed to delete topic. Status code: " + response.getStatusCode());
-            }
-        } catch (ResourceAccessException e) {
-            System.err.println("Error accessing FHIR server: " + e.getMessage());
-        }
-    }
     public void deleteSubscription(String subscriptionId) {
         try {
             String url = fhirServerUrl + "/Subscription/" + subscriptionId;
@@ -330,6 +318,108 @@ public class FhirClient {
             System.out.println("Subscription deleted successfully.");
         } catch (ResourceAccessException e) {
             System.err.println("Error accessing FHIR server: " + e.getMessage());
+        }
+    }
+
+    //------------
+    public List<SubscriptionTopicDetails.FilterDetail> getFilters(String topicUrl) {
+        try {
+            String url = fhirServerUrl + "/SubscriptionTopic?url=" + topicUrl;
+            HttpHeaders headers = createHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String json = response.getBody();
+
+            // Parsear el JSON para obtener los filtros usando HAPI FHIR
+            FhirContext ctx = FhirContext.forR5();
+            Bundle bundle = ctx.newJsonParser().parseResource(Bundle.class, json);
+
+            if (bundle == null || bundle.getEntry().isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            SubscriptionTopic topic = (SubscriptionTopic) bundle.getEntryFirstRep().getResource();
+            List<SubscriptionTopicDetails.FilterDetail> filters = new ArrayList<>();
+                for (SubscriptionTopic.SubscriptionTopicCanFilterByComponent filterComponent : topic.getCanFilterBy()) {
+                    String description = filterComponent.getDescription();
+                    String filterParameter = filterComponent.getFilterParameter();
+
+                    // Obtener comparadores y modificadores
+                    List<String> comparators = new ArrayList<>();
+                    for (org.hl7.fhir.r5.model.Enumeration<org.hl7.fhir.r5.model.Enumerations.SearchComparator> comparatorEnum : filterComponent.getComparator()) {
+                        comparators.add(comparatorEnum.getCode());
+                    }
+
+                    List<String> modifiers = new ArrayList<>();
+                    for (org.hl7.fhir.r5.model.Enumeration<org.hl7.fhir.r5.model.Enumerations.SearchModifierCode> modifierEnum : filterComponent.getModifier()) {
+                        modifiers.add(modifierEnum.getCode());
+                    }
+
+                    filters.add(new SubscriptionTopicDetails.FilterDetail(description, filterParameter, comparators, modifiers));
+                }
+
+            return filters;
+        } catch (Exception e) {
+            System.err.println("Error fetching filters: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public void createSubscription(String topicUrl, String payload, List<Filter> filters) {
+        try {
+            String url = fhirServerUrl + "/Subscription";
+            HttpHeaders headers = createHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            JSONObject subscriptionJson = new JSONObject();
+            subscriptionJson.put("resourceType", "Subscription");
+            subscriptionJson.put("status", "active");
+            subscriptionJson.put("topic", topicUrl);
+
+            JSONObject channelType = new JSONObject();
+            channelType.put("code", "rest-hook");
+
+            subscriptionJson.put("channelType", channelType);
+            subscriptionJson.put("endpoint", "http://localhost:8090/endpoint");
+            subscriptionJson.put("heartbeatPeriod", 60);
+            subscriptionJson.put("timeout", 300);
+            subscriptionJson.put("content", payload);
+            subscriptionJson.put("contentType", "application/fhir+json");
+
+            JSONArray filterByArray = new JSONArray();
+            for (Filter filter : filters) {
+                if (!"NULL".equals(filter.getValue())) {
+                    JSONObject filterBy = new JSONObject();
+                    filterBy.put("filterParameter", filter.getParameter());
+                    if (filter.getComparator() != null || !filter.getComparator().isEmpty()) {
+                        filterBy.put("comparator", filter.getComparator());
+                    }
+                    if (filter.getModifier() != null || !filter.getModifier().isEmpty()) {
+                        filterBy.put("modifier", filter.getModifier());
+                    }
+                    filterBy.put("value", filter.getValue());
+                    filterByArray.put(filterBy);
+                }
+            }
+
+            if (!filterByArray.isEmpty()) {
+                subscriptionJson.put("filterBy", filterByArray);
+            }
+
+            HttpEntity<String> entity = new HttpEntity<>(subscriptionJson.toString(), headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            if (response.getStatusCode() == HttpStatus.CREATED) {
+                System.out.println("Subscription created successfully.");
+            } else {
+                System.err.println("Failed to create subscription. Status code: " + response.getStatusCode());
+            }
+        } catch (ResourceAccessException e) {
+            System.err.println("Error accessing FHIR server: " + e.getMessage());
+        } catch (HttpClientErrorException e) {
+            System.err.println("Client error: " + e.getMessage());
+            System.err.println("Response body: " + e.getResponseBodyAsString());
         }
     }
 }

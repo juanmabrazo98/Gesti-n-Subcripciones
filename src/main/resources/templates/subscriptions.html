@@ -10,17 +10,26 @@
             <thead>
                 <tr>
                     <th>Endpoint</th>
-                    <th>Payload Type</th>
                     <th>Topic</th>
                     <th>ID</th>
+                    <th>Filters</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="subscription : ${subscriptions}">
                     <td th:text="${subscription.endpoint}">Endpoint</td>
-                    <td th:text="${subscription.payloadType}">Payload Type</td>
                     <td th:text="${subscription.topic}">Topic</td>
                     <td th:text="${subscription.id}">ID</td>
+                    <td>
+                        <ul>
+                            <li th:each="filter : ${subscription.filters}">
+                                <span th:text="'Parameter: ' + ${filter.filterParameter}"></span>
+                                <span th:if="${filter.comparator != null}" th:text="', Comparator: ' + ${filter.comparator}"></span>
+                                <span th:if="${filter.modifier != null}" th:text="', Modifier: ' + ${filter.modifier}"></span>
+                                <span th:text="', Value: ' + ${filter.value}"></span>
+                            </li>
+                        </ul>
+                    </td>
                 </tr>
             </tbody>
         </table>
