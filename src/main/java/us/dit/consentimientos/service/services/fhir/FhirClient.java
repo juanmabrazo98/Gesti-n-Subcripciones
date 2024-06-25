@@ -402,4 +402,35 @@ public class FhirClient {
             System.err.println("Response body: " + e.getResponseBodyAsString());
         }
     }
+
+    public String getNotificationResourceId(String json) {
+        System.out.println(json);
+        String id = null;
+
+        try {
+            // Convertir el string JSON en un objeto JSONObject
+            JSONObject jsonObject = new JSONObject(json);
+
+            // Obtener el array "entry" del objeto JSON
+            JSONArray entries = jsonObject.getJSONArray("entry");
+
+            // Iterar sobre los elementos del array
+            for (int i = 0; i < entries.length(); i++) {
+                JSONObject entry = entries.getJSONObject(i);
+
+                // Verificar si el objeto tiene la clave "request"
+                if (entry.has("request")) {
+                    // Obtener el valor de "fullUrl"
+                    String fullUrl = entry.getString("fullUrl");
+                    // Asignar el valor de "fullUrl" a id
+                    id = fullUrl;
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return id;
+    }
 }

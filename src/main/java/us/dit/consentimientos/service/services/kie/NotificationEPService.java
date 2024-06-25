@@ -29,4 +29,8 @@ public class NotificationEPService {
     public Optional<NotificationEP> findNotificationEPByResourceAndInteraction(String resource, String interaction) {
         return notificationEPRepository.findByResourceAndInteraction(resource, interaction);
     }
+
+    public Optional<NotificationEP> findById(Long id) {
+        return notificationEPRepository.findById(id);
+    }
 }

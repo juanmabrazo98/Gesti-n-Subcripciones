@@ -67,7 +67,7 @@ public class SubscriptionController {
          if (optionalNotificationEP.isPresent()) {
              //si existe cogemos el id y este será nuestro endpoint
              NotificationEP existingNotificationEP = optionalNotificationEP.get();
-             endpoint = "localhost:8090/notification/" + existingNotificationEP.getId();
+             endpoint = "http://localhost:8090/notification/" + existingNotificationEP.getId();
          } else {
             //Si no existe se crea un endpoint nuevo
              String signalName = interaction+"-"+resource; 
@@ -76,7 +76,7 @@ public class SubscriptionController {
              newNotificationEP.setInteraction(interaction);
              newNotificationEP.setSignalName(signalName);
              NotificationEP savedNotificationEP = notificationEPService.saveNotificationEP(newNotificationEP);
-             endpoint = "localhost:8090/notification/" + savedNotificationEP.getId();
+             endpoint = "http://localhost:8090/notification/" + savedNotificationEP.getId();
              // Resto de la lógica
          }
 

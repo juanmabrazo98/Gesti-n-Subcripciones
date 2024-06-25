@@ -1,27 +1,19 @@
 package us.dit.consentimientos.service.conf;
 
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import static org.springframework.security.config.Customizer.withDefaults;
-
 import java.util.Arrays;
-
-import org.springframework.security.web.SecurityFilterChain;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-
+import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-//import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-//import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -43,22 +35,18 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class DefaultWebSecurityConfig {
 
-	@Bean
-	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		/**
-		 * Configuro el constructor de un objeto
-		 * org.springframework.security.config.annotation.web.builders.HttpSecurity
-		 * https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/builders/HttpSecurity.html#authorizeHttpRequests(org.springframework.security.config.Customizer)
-		 */
-		http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
-				.antMatchers(HttpMethod.POST, "/endpoint").permitAll()  // Permitir POST a /endpoint sin autenticación
-				.antMatchers("/*").authenticated()
-				.antMatchers("/img/*").permitAll()
-				.antMatchers("/topics").authenticated())
-				.exceptionHandling((exceptionHandling) -> exceptionHandling.accessDeniedPage("/access-denied.html"))
-				.csrf((csrf) -> csrf.disable()).httpBasic(withDefaults()).cors(withDefaults())
-				.formLogin(withDefaults());
-		return http.build();
+@Bean
+SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
+            .antMatchers(HttpMethod.POST, "/endpoint").permitAll()  // Permitir POST a /endpoint sin autenticación
+            .antMatchers(HttpMethod.POST, "/notification/**").permitAll()  // Permitir POST a /notification/** sin autenticación
+            .antMatchers("/*").authenticated()
+            .antMatchers("/img/*").permitAll()
+            .antMatchers("/topics").authenticated())
+            .exceptionHandling((exceptionHandling) -> exceptionHandling.accessDeniedPage("/access-denied.html"))
+            .csrf((csrf) -> csrf.disable()).httpBasic(withDefaults()).cors(withDefaults())
+            .formLogin(withDefaults());
+    return http.build();
 	}
 
 	/**
