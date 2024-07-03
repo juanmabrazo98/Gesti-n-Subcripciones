@@ -30,7 +30,7 @@ Este proyecto es una aplicación para la gestión de suscripciones utilizando FH
 2. Configurar la base de datos PostgreSQL
    Crear la base de datos
 
-   ```bash
+   
    sudo -u postgres createdb fkbroker
 
    Otorgar todos los privilegios al usuario jbpm (O el que se configure como usuario en application.properties )
