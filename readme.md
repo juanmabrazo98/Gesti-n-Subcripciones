@@ -32,14 +32,14 @@ Este proyecto es una aplicación para la gestión de suscripciones utilizando FH
    Crear la base de datos
 
    ```bash
-   sudo -u postgres createdb fkbroker
+    sudo -u postgres createdb fkbroker
 
-Otorgar todos los privilegios al usuario jbpm (O el que se configure como usuario en application.properties )
+   Otorgar todos los privilegios al usuario jbpm (O el que se configure como usuario en application.properties )
 
    ```bash
-   GRANT ALL PRIVILEGES ON DATABASE fkbroker TO jbpm;
+    GRANT ALL PRIVILEGES ON DATABASE fkbroker TO jbpm;
 
-Configurar application.properties
+   Configurar application.properties
 
    ```bash
    spring.datasource.username=jbpm
