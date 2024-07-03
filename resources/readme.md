@@ -4,7 +4,7 @@ En esta carpeta, encontrarás una colección de Postman y dos activos de Busines
 
 ## Contenidos
 
-- `resources/Postman_Collection.json`: Colección de Postman para realizar pruebas y validar las funcionalidades del servicio.
+- `resources/Solicitudes servidor FHIR.postman_collection.json`: Colección de Postman para realizar pruebas y validar las funcionalidades del servicio.
 - `resources/create-ServiceRequest.bpmn`: Activo con el proceso de negocio que recibe la señal "create-ServiceRequest".
 - `resources/update-ServiceRequest.bpmn`:Activo con el proceso de negocio que recibe la señal "update-ServiceRequest"
 
@@ -34,7 +34,7 @@ En esta carpeta, encontrarás una colección de Postman y dos activos de Busines
 2. **Importar la Colección**:
    - Abre Postman.
    - Haz clic en el botón "Importar" en la parte superior izquierda.
-   - Selecciona el archivo `Postman_Collection.json` ubicado en la carpeta `resources` de este repositorio.
+   - Selecciona el archivo `Solicitudes servidor FHIR.postman_collection.json` ubicado en la carpeta `resources` de este repositorio.
 3. **Ejecutar Requests**:
    - Navega por las carpetas y requests dentro de la colección importada.
    - Selecciona el request que deseas ejecutar y haz clic en "Send" para realizar la llamada al servicio.
