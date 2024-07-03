@@ -30,24 +30,28 @@ Este proyecto es una aplicación para la gestión de suscripciones utilizando FH
 2. Configurar la base de datos PostgreSQL
    Crear la base de datos
 
-    sudo -u postgres createdb fkbroker
+   ```bash
+   sudo -u postgres createdb fkbroker
 
-Otorgar todos los privilegios al usuario jbpm (O el que se configure como usuario en application.properties )
+   Otorgar todos los privilegios al usuario jbpm (O el que se configure como usuario en application.properties )
 
-    GRANT ALL PRIVILEGES ON DATABASE fkbroker TO jbpm;
+   ```bash
+   GRANT ALL PRIVILEGES ON DATABASE fkbroker TO jbpm;
 
-Configurar application.properties
+   Configurar application.properties
 
-    spring.datasource.username=jbpm
-    spring.datasource.password=jbpm
-    spring.datasource.url=jdbc:postgresql://localhost:5432/fkbroker
-    spring.datasource.driver-class-name=org.postgresql.xa.PGXADataSource
+   ```bash
+   spring.datasource.username=jbpm
+   spring.datasource.password=jbpm
+   spring.datasource.url=jdbc:postgresql://localhost:5432/fkbroker
+   spring.datasource.driver-class-name=org.postgresql.xa.PGXADataSource
 
 3. Compilar y ejecutar la aplicación
 
-Desde el directorio raiz de la aplicación ejecutar el siguiente comando:
-   
-    sudo ./launch.sh clean install -Ppostgres 
+   Desde el directorio raiz de la aplicación ejecutar el siguiente comando:
+
+   ```bash
+   sudo ./launch.sh clean install -Ppostgres 
 
 
 
