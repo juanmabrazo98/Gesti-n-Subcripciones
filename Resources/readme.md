@@ -40,7 +40,3 @@ En esta carpeta, encontrarás una colección de Postman y dos activos de Busines
    - Selecciona el request que deseas ejecutar y haz clic en "Send" para realizar la llamada al servicio.
    - Estos Request se encuentran enumerados en orden de uso.
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 191807413a3fa4d891b226e3ac2729560e35436d
