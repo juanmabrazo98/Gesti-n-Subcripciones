@@ -28,7 +28,7 @@ Este proyecto es una aplicación para la gestión de suscripciones utilizando FH
    cd broker-service
 
 2. Configurar la base de datos PostgreSQL
-Crear la base de datos
+   Crear la base de datos
 
     sudo -u postgres createdb fkbroker
 
