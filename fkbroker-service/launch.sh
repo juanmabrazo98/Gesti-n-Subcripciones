@@ -26,7 +26,7 @@ if [ "$MVN_ARG_LINE" != "" ] ; then
 
     "$mvnBin" -v
     echo
-    projects=( "broker-service" )
+    projects=( "fkbroker-service" )
 
     # Itera sobre cada tipo de proyecto definido en la variable projects
     for suffix in "${projects[@]}"; do
