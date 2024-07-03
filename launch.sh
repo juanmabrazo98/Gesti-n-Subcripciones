@@ -1,4 +1,6 @@
 #!/bin/bash
+
+# Cambia al directorio broker-service
 cd ..
 MVN_ARG_LINE=()
 
@@ -13,7 +15,7 @@ done
 
 startDateTime=`date +%s`
 
-# check that Maven args are non empty
+# Verifica que los argumentos de Maven no estén vacíos
 if [ "$MVN_ARG_LINE" != "" ] ; then
     mvnBin="mvn"
     if [ -a $M3_HOME/bin/mvn ] ; then
@@ -24,11 +26,12 @@ if [ "$MVN_ARG_LINE" != "" ] ; then
 
     "$mvnBin" -v
     echo
-    projects=( "*-model" "*-kjar" "consentimientos-service")
+    projects=( "broker-service" )
 
+    # Itera sobre cada tipo de proyecto definido en la variable projects
     for suffix in "${projects[@]}"; do
 
-        for repository in $suffix;  do
+        for repository in $suffix; do
         echo
             if [ -d "$repository" ]; then
                 echo "==============================================================================="
@@ -37,9 +40,11 @@ if [ "$MVN_ARG_LINE" != "" ] ; then
 
                 cd $repository
 
+                # Ejecuta Maven con los argumentos proporcionados
                 "$mvnBin" "${MVN_ARG_LINE[@]}"
                 returnCode=$?
 
+                # Si Maven retorna un código de error, termina el script
                 if [ $returnCode != 0 ] ; then
                     exit $returnCode
                 fi
@@ -50,31 +55,18 @@ if [ "$MVN_ARG_LINE" != "" ] ; then
         done;
     done;
     endDateTime=`date +%s`
-    spentSeconds=`expr $endDateTime - $startDateTime`
+    spentSeconds=`expr $endDateTime - $endDateTime`
     echo
     echo "Total build time: ${spentSeconds}s"
 
 else
     echo "No Maven arguments skipping maven build"
-        
 fi
 
-
-if [[ "$@" =~ "docker" ]]; then
-    echo "Launching the application as docker container..."
-    
-    docker run -d -p 8090:8090 --name consentimientos-service apps/consentimientos-service:1.0-SNAPSHOT
-elif [[ "$@" =~ "openshift" ]]; then
-    echo "Launching the application on OpenShift..."
-    
-    oc new-app consentimientos-service:1.0-SNAPSHOT
-    oc expose svc/consentimientos-service
-else
-
-	echo "Launching the application locally..."
-	pattern="consentimientos-service"
-	files=( $pattern )
-	cd ${files[0]}
-	executable="$(ls  *target/*.jar | tail -n1)"
-	java -jar "$executable"
-fi
+# Lanza la aplicación localmente
+echo "Launching the application locally..."
+pattern="broker-service"
+files=( $pattern )
+cd ${files[0]}
+executable="$(ls *target/*.jar | tail -n1)"
+java -jar "$executable"

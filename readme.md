@@ -1,20 +1,58 @@
-# Servicio Consentimientos
-El componente "consentimientos-service" contiene la aplicación de negocio del proyecto para la gestión de consentimientos
-## Tecnologías
-Utiliza Spring boot 2 y jBPM (kie server 7.74.1.Final)
-## Generación
-Se ha generado con el arquetipo mvn con las opciones:
-* ` mvn archetype:generate -B "-DarchetypeGroupId=org.kie" "-DarchetypeArtifactId=kie-service-spring-boot-archetype" "-DarchetypeVersion=7.74.1.Final" "-DgroupId=us.dit" "-DartifactId=consentimientos-service" "-Dversion=1.0-SNAPSHOT" "-Dpackage=us.dit.consentimientos.service" "-DappType=bpm"`
+# Gestión de Subcripciones
 
-Pero posteriormente se han hecho los siguientes cambios a la configuración por defecto:
-1. En pom.xml se ha añadido, para que utilice Spring boot 2.6.15
-2. Se ha cambiado la configuración de seguridad para que sea conforme a los nuevos mecanismos de Spring
-3. Se ha cambiado el banner por defecto. Se ha usado la web: https://manytools.org/hacker-tools/ascii-banner/
-4. Se ha añadido el fichero consentimientos-service.xml para incluir la configuración del servidor kie
-5. En el script de arranque para windows _launch.bat_ se ha cambiado la sentencia de arranque local, incluyendo opciones _call java -Dorg.kie.server.bypass.auth.user=true -Dorg.kie.server.pwd=consentimientos -Dorg.kie.server.user=consentimientos -jar target\!latestjar!_
+## Descripción
 
-## Ejecución
-* application.properties está preparado para usar postgres como bbdd por defecto (se ha manenido el original como BU)
-* Debe estar creada la BBDD y el usuario en el servidor postgres y después ejecutar (base de datos consentimientos, usuario jbpm). Pero se puede cambiar la configuración de base de datos en el fichero de propiedades
-* En windows ejecutar .\launch.bat clean install -Ppostgres
-* Se ha añadido una clase para la configuración de las variables del sistema que configuran el servidor kie (o cualquier otra). Es necesario añadir en application.properties la variable con el prefijo system.properties
+Este proyecto es una aplicación para la gestión de suscripciones utilizando FHIR, Kie Server y Spring Boot. La aplicación permite crear, visualizar, modificar y eliminar suscripciones y notificaciones a través de una interfaz web.
+
+## Características
+
+- Gestión de Kie Servers.
+- Gestión de Notification EPs.
+- Creación y eliminación de suscripciones.
+- Visualización y filtrado de suscripciones.
+- Integración con FHIR y Kie Server.
+- Configuración a través de `application.properties`.
+
+## Requisitos
+
+- Java 8 o superior
+- Maven 3.6.3 o superior
+- PostgreSQL 12 o superior
+
+## Instalación
+
+1. Clonar el repositorio
+
+   ```bash
+   git clone https://github.com/juanmabrazo98/Gesti-n-Subcripciones
+   cd broker-service
+
+2. Configurar la base de datos PostgreSQL
+Crear la base de datos
+
+    sudo -u postgres createdb fkbroker
+
+Otorgar todos los privilegios al usuario jbpm (O el que se configure como usuario en application.properties )
+
+    GRANT ALL PRIVILEGES ON DATABASE fkbroker TO jbpm;
+
+Configurar application.properties
+
+    spring.datasource.username=jbpm
+    spring.datasource.password=jbpm
+    spring.datasource.url=jdbc:postgresql://localhost:5432/fkbroker
+    spring.datasource.driver-class-name=org.postgresql.xa.PGXADataSource
+
+3. Compilar y ejecutar la aplicación
+
+Desde el directorio raiz de la aplicación ejecutar el siguiente comando:
+   
+    sudo ./launch.sh clean install -Ppostgres 
+
+
+
+## Autor
+
+
+
+Juanma Brazo 
