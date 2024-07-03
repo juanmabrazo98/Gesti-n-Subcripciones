@@ -1,4 +1,4 @@
-# Gestión de Subcripciones
+# Gestión de Suscripciones
 
 ## Descripción
 
